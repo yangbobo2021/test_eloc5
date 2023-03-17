@@ -72,7 +72,8 @@ export default {
 
       await this.setMapCenter(newv);
 
-      await this.createAllCircles();
+      await this.createAllCircles1();
+      // await this.createAllCircles2();
 
       await this.initEditStatus();
     },
@@ -192,7 +193,7 @@ export default {
     },
 
     // 生成商圈
-    async createAllCircles() {
+    async createAllCircles2() {
       const list = await this.fetchAllTongShi();
 
       // 生成 circleMap
@@ -209,7 +210,7 @@ export default {
             strokeColor: "",
             strokeOpacity: 0,
             fillColor: circleColor,
-            fillOpacity: item.isJuHe ? DEEP_OPACITY : LIGHT_OPACITY,
+            fillOpacity: item.isJuHe ? LIGHT_OPACITY : DEEP_OPACITY,
           },
         });
         itemBoundary.addEventListener("click", this.onCircleClick);
@@ -232,11 +233,65 @@ export default {
       this.drawAllCircles();
     },
 
+    // 生成商圈
+    async createAllCircles1() {
+      const list = await this.fetchAllTongShi();
+
+      let tempColorMap = new Map();
+      let tempColors = [];
+      let tempColor = "";
+      // 生成 circleMap
+      for (let i = 0; i < list.length; i++) {
+        let item = list[i];
+
+        let l2id = item.baseBizCircleL2Id;
+        if (tempColors.length === 0) {
+          tempColors = [...CIRCLE_COLOR_MAP];
+        }
+        tempColor = tempColorMap.get(l2id) || tempColors.splice(0, 1)[0];
+
+        console.log("oooooooooo", tempColor, l2id);
+        tempColorMap.set(l2id, tempColor);
+
+        // 生成 面
+        const itemBoundarys = item.children.map((item2) => {
+          const itemBoundary = new BoundaryBase({
+            info: item2,
+            points: formatPolygonStr(item2.positionBorder),
+            styleOptions: {
+              strokeColor: "",
+              strokeOpacity: 0,
+              fillColor: tempColor,
+              fillOpacity: item2.isJuHe ? LIGHT_OPACITY : DEEP_OPACITY,
+            },
+          });
+          itemBoundary.addEventListener("click", this.onCircleClick);
+          return itemBoundary;
+        });
+
+        // 生成 点
+        // const itemMarker = new MarkerBase({
+        //   iconColor: "red",
+        //   iconSize: [14, 27],
+        //   labelContent: item.baseBizCircleName,
+        //   markerPoint: formatPointLngLat(item.centerPoint),
+        // });
+
+        this.circleMap.set(item.baseBizCircleL2Id, {
+          circleColor: tempColor,
+          // markerService: itemMarker,
+          boundaryService: itemBoundarys,
+        });
+      }
+
+      this.drawAllCircles();
+    },
+
     // 画商圈
     drawAllCircles() {
       this.circleMap.forEach((value, key) => {
         this.mapService.addOverlay(value.boundaryService.getBoundary());
-        // this.mapService.addOverlay(value.markerService.getMarker());
+        this.mapService.addOverlay(value.markerService.getMarker());
       });
     },
 
@@ -253,7 +308,7 @@ export default {
       } else {
         // 取消点选
         tempBoundary.setFillColor(tempCircle.circleColor);
-        tempBoundary.setFillOpacity(info.isJuHe ? DEEP_OPACITY : LIGHT_OPACITY);
+        tempBoundary.setFillOpacity(info.isJuHe ? LIGHT_OPACITY : DEEP_OPACITY);
 
         for (let i = 0; i < this.selectedCircleArr.length; i++) {
           const item = this.selectedCircleArr[i];
@@ -408,32 +463,292 @@ export default {
 
     // 获取所有通识商圈
     async fetchAllTongShi() {
-      let { data } = await fetchBizCircleList(
-        {
-          cityCode: this.cityCode,
-          pageSize: 998,
-          pageNum: 1,
-          status: 1,
-          optionModule: "bizCircle_k1",
-          bizcircleTag: "3",
-        },
-        3
-      );
+      let res2 = {
+        code: "20000",
+        data: [
+          {
+            bizcircleGmv: 3.51,
+            bizcircleId: 56,
+            bizcircleIdL2: 111,
+            bizcircleL2Name: "rt",
+            centerPoint: "POINT(116.42474276527273 39.90552310636364)",
+            layoutNum: 95926,
+            name: "崇文门",
+            position:
+              "POLYGON((116.40954 39.92173,116.44059 39.92256,116.44248 39.90678,116.449850865 39.904058142,116.449888489 39.898920146,116.425167177 39.899197028,116.425043887 39.894388854,116.40494 39.89394,116.40458 39.89831,116.41055 39.89914,116.40954 39.92173))",
+          },
+          {
+            bizcircleGmv: 0,
+            bizcircleId: 67,
+            bizcircleIdL2: 111,
+            bizcircleL2Name: "fdsa",
+            centerPoint: "POINT(114.06720725849007 22.577900698109225)",
+            layoutNum: null,
+            name: "范德萨",
+            position:
+              "POLYGON((114.0674078473529 22.578227742921687,114.0666545247348 22.577606771155626,114.06775999224539 22.577573652581922,114.0674078473529 22.578227742921687))",
+          },
+          {
+            bizcircleGmv: 0,
+            bizcircleId: 68,
+            bizcircleIdL2: 111,
+            bizcircleL2Name: "fass",
+            centerPoint: "POINT(114.06635478768912 22.579084525114098)",
+            layoutNum: null,
+            name: "为服务",
+            position:
+              "POLYGON((114.06625870271493 22.57933098490496,114.06607568371638 22.57883806455993,114.0666338916619 22.578948546861326,114.06625870271493 22.57933098490496))",
+          },
+          {
+            bizcircleGmv: 0.023,
+            bizcircleId: 69,
+            bizcircleIdL2: 222,
+            bizcircleL2Name: "dsa",
+            centerPoint: "POINT(121.5252373416777 31.248844413681923)",
+            layoutNum: 1309,
+            name: "饿死位夫人",
+            position:
+              "POLYGON((121.52422768140832 31.24978296816161,121.52624700194725 31.249201897001324,121.5248362012862 31.247906121391892,121.5248362012862 31.247906121391892,121.52422768140832 31.24978296816161))",
+          },
+          {
+            bizcircleGmv: 0,
+            bizcircleId: 86,
+            bizcircleIdL2: 222,
+            bizcircleL2Name: "sdfdsa",
+            centerPoint: "POINT(121.52732801030498 31.2507086771839)",
+            layoutNum: null,
+            name: "对方v",
+            position:
+              "POLYGON((121.52481750937446 31.25156380781526,121.52983851123565 31.25074767555031,121.52920523172159 31.24985380822888,121.52663671294721 31.250333427208353,121.52481750937446 31.25156380781526))",
+          },
+          {
+            bizcircleGmv: 0.551,
+            bizcircleId: 90,
+            bizcircleIdL2: 222,
+            bizcircleL2Name: "dsaf",
+            centerPoint: "POINT(120.63379127731079 31.304557765346583)",
+            layoutNum: 36876,
+            name: "苏州站",
+            position:
+              "POLYGON((120.62885651367938 31.312247223408967,120.61539212549275 31.311012599665265,120.61787584758544 31.30674741008341,120.62062101410892 31.29288419720344,120.65219042912899 31.29613971157086,120.64826876266689 31.316231579464826,120.62885651367938 31.312247223408967))",
+          },
+          {
+            bizcircleGmv: 1.753,
+            bizcircleId: 92,
+            bizcircleIdL2: 333,
+            bizcircleL2Name: "fdsa",
+            centerPoint: "POINT(116.38456154174776 39.96561554338498)",
+            layoutNum: 31879,
+            name: "33333",
+            position:
+              "POLYGON((116.36831575705864 39.97287417319735,116.37705004990231 39.958356767747894,116.40080732643703 39.968573043684785,116.40080732643703 39.968573043684785,116.36831575705864 39.97287417319735))",
+          },
+          {
+            bizcircleGmv: 0.033,
+            bizcircleId: 101,
+            bizcircleIdL2: 333,
+            bizcircleL2Name: "",
+            centerPoint: "POINT(104.10987811303389 30.661289077447414)",
+            layoutNum: 2707,
+            name: "苏州2级2222",
+            position:
+              "POLYGON((104.10376206947207 30.663887935595106,104.11603978806018 30.661557956203996,104.1081540988857 30.65871012657184,104.10376206947207 30.663887935595106))",
+          },
+          {
+            bizcircleGmv: 0.062,
+            bizcircleId: 129,
+            bizcircleIdL2: 333,
+            bizcircleL2Name: "asdf",
+            centerPoint: "POINT(116.48000075202908 39.85163878845569)",
+            layoutNum: 2257,
+            name: "测试4.0",
+            position:
+              "POLYGON((116.46802728577312 39.85989373358529,116.46809047029163 39.8430428079365,116.48363386184299 39.848546603452796,116.49197421828518 39.859309378220196,116.48388659991699 39.86023460523191,116.46802728577312 39.85989373358529))",
+          },
+          {
+            bizcircleGmv: 0,
+            bizcircleId: 186,
+            bizcircleIdL2: 444,
+            bizcircleL2Name: "cqdf",
+            centerPoint: "POINT(114.06720725849007 22.577900698109225)",
+            layoutNum: null,
+            name: "范德萨",
+            position:
+              "POLYGON((114.0674078473529 22.578227742921687,114.0666545247348 22.577606771155626,114.06775999224539 22.577573652581922,114.0674078473529 22.578227742921687))",
+          },
+          {
+            bizcircleGmv: 0,
+            bizcircleId: 187,
+            bizcircleIdL2: 444,
+            bizcircleL2Name: "fsads",
+            centerPoint: "POINT(114.06635478768912 22.579084525114098)",
+            layoutNum: null,
+            name: "为服务",
+            position:
+              "POLYGON((114.06625870271493 22.57933098490496,114.06607568371638 22.57883806455993,114.0666338916619 22.578948546861326,114.06625870271493 22.57933098490496))",
+          },
+          {
+            bizcircleGmv: 0.023,
+            bizcircleId: 188,
+            bizcircleIdL2: 444,
+            bizcircleL2Name: "safdsad",
+            centerPoint: "POINT(121.5252373416777 31.248844413681923)",
+            layoutNum: 1309,
+            name: "饿死位夫人",
+            position:
+              "POLYGON((121.52422768140832 31.24978296816161,121.52624700194725 31.249201897001324,121.5248362012862 31.247906121391892,121.5248362012862 31.247906121391892,121.52422768140832 31.24978296816161))",
+          },
+          {
+            bizcircleGmv: 0,
+            bizcircleId: 204,
+            centerPoint: "POINT(121.52732801030498 31.2507086771839)",
+            layoutNum: null,
+            name: "对方v",
+            position:
+              "POLYGON((121.52481750937446 31.25156380781526,121.52983851123565 31.25074767555031,121.52920523172159 31.24985380822888,121.52663671294721 31.250333427208353,121.52481750937446 31.25156380781526))",
+          },
+          {
+            bizcircleGmv: 0.551,
+            bizcircleId: 208,
+            centerPoint: "POINT(120.63379127731079 31.304557765346583)",
+            layoutNum: 36876,
+            name: "苏州站",
+            position:
+              "POLYGON((120.62885651367938 31.312247223408967,120.61539212549275 31.311012599665265,120.61787584758544 31.30674741008341,120.62062101410892 31.29288419720344,120.65219042912899 31.29613971157086,120.64826876266689 31.316231579464826,120.62885651367938 31.312247223408967))",
+          },
+          {
+            bizcircleGmv: 1.753,
+            bizcircleId: 210,
+            centerPoint: "POINT(116.38456154174776 39.96561554338498)",
+            layoutNum: 31880,
+            name: "33333",
+            position:
+              "POLYGON((116.36831575705864 39.97287417319735,116.37705004990231 39.958356767747894,116.40080732643703 39.968573043684785,116.40080732643703 39.968573043684785,116.36831575705864 39.97287417319735))",
+          },
+          {
+            bizcircleGmv: 0.033,
+            bizcircleId: 228,
+            centerPoint: "POINT(104.10987811303389 30.661289077447414)",
+            layoutNum: 2707,
+            name: "苏州2级2222",
+            position:
+              "POLYGON((104.10376206947207 30.663887935595106,104.11603978806018 30.661557956203996,104.1081540988857 30.65871012657184,104.10376206947207 30.663887935595106))",
+          },
+          {
+            bizcircleGmv: 0.062,
+            bizcircleId: 245,
+            centerPoint: "POINT(116.48000075202908 39.85163878845569)",
+            layoutNum: 2257,
+            name: "测试4.0",
+            position:
+              "POLYGON((116.46802728577312 39.85989373358529,116.46809047029163 39.8430428079365,116.48363386184299 39.848546603452796,116.49197421828518 39.859309378220196,116.48388659991699 39.86023460523191,116.46802728577312 39.85989373358529))",
+          },
+        ],
+        message: "success",
+        success: true,
+      };
+      let res1 = {
+        code: "20000",
+        data: [
+          {
+            bizcircleGmv: 0.02,
+            bizcircleIdL1: 111,
+            bizcircleIdL2: 1,
+            bizcircleL1Name: "111",
+            bizcircleL2Name: "654321",
+            centerPoint: "POINT(116.33444728233876 39.93214506365353)",
+            layoutNum: 411,
+            name: "全奉献-测试通识商圈",
+            position: [
+              "POLYGON((116.33115863480704 39.93379946839602,116.32956315234114 39.93149324000699,116.33933141233652 39.930490507580814,116.33115863480704 39.93379946839602))",
+              "POLYGON((116.41596230084997 39.86277857543709,116.39123676268007 39.84973964606184,116.4263730537636 39.850074008776325,116.41596230084997 39.86277857543709))",
+            ],
+          },
+          {
+            bizcircleGmv: 3.042,
+            bizcircleIdL1: 111,
+            bizcircleIdL2: 2,
+            bizcircleL1Name: "111",
+            bizcircleL2Name: "asfsa",
+            centerPoint: "POINT(117.19568525576278 39.13187768367064)",
+            layoutNum: 100323,
+            name: "lis42-2",
+            position:
+              "POLYGON((117.18465222682082 39.13725469162148,117.184474077487 39.129311055365626,117.18883873616583 39.12493993572692,117.19743444152316 39.12337875529183,117.24596925769842 39.12127302138104,117.20407514128894 39.134385023015575,117.19632100818671 39.140376397434366,117.18465222682082 39.13725469162148))",
+              "POLYGON((121.52481750937446 31.25156380781526,121.52983851123565 31.25074767555031,121.52920523172159 31.24985380822888,121.52663671294721 31.250333427208353,121.52481750937446 31.25156380781526))",
+          },
+          {
+            bizcircleGmv: 3.51,
+            bizcircleIdL1: 222,
+            bizcircleIdL2: 3,
+            bizcircleL1Name: "222",
+            bizcircleL2Name: "崇文门",
+            centerPoint: "POINT(116.42474276527273 39.90552310636364)",
+            layoutNum: 95926,
+            name: "崇文门",
+            position:
+              "POLYGON((116.40954 39.92173,116.44059 39.92256,116.44248 39.90678,116.449850865 39.904058142,116.449888489 39.898920146,116.425167177 39.899197028,116.425043887 39.894388854,116.40494 39.89394,116.40458 39.89831,116.41055 39.89914,116.40954 39.92173))",
+              "POLYGON((120.62885651367938 31.312247223408967,120.61539212549275 31.311012599665265,120.61787584758544 31.30674741008341,120.62062101410892 31.29288419720344,120.65219042912899 31.29613971157086,120.64826876266689 31.316231579464826,120.62885651367938 31.312247223408967))",
+              "POLYGON((121.52422768140832 31.24978296816161,121.52624700194725 31.249201897001324,121.5248362012862 31.247906121391892,121.5248362012862 31.247906121391892,121.52422768140832 31.24978296816161))",
+          },
+          {
+            bizcircleGmv: 0,
+            bizcircleIdL1: 222,
+            bizcircleIdL2: 4,
+            bizcircleL1Name: "222",
+            bizcircleL2Name: "范德萨",
+            centerPoint: "POINT(114.06720725849007 22.577900698109225)",
+            layoutNum: null,
+            name: "范德萨",
+            position:
+              "POLYGON((114.0674078473529 22.578227742921687,114.0666545247348 22.577606771155626,114.06775999224539 22.577573652581922,114.0674078473529 22.578227742921687))",
+              "POLYGON((116.36831575705864 39.97287417319735,116.37705004990231 39.958356767747894,116.40080732643703 39.968573043684785,116.40080732643703 39.968573043684785,116.36831575705864 39.97287417319735))",
+              "POLYGON((114.06625870271493 22.57933098490496,114.06607568371638 22.57883806455993,114.0666338916619 22.578948546861326,114.06625870271493 22.57933098490496))",
 
-      data.list = data.list.map((item) => {
-        item.baseBizCircleL2Id = "";
-        if (item.baseBizCircleName.includes("聚合2级98")) {
-          item.baseBizCircleL2Id = 98;
-        }
-        if (item.baseBizCircleName.includes("聚合2级56")) {
-          item.baseBizCircleL2Id = 56;
-        }
+          },
+          {
+            bizcircleGmv: 0,
+            bizcircleIdL1: null,
+            bizcircleIdL2: 5,
+            bizcircleL1Name: "",
+            bizcircleL2Name: "为服务",
+            centerPoint: "POINT(114.06635478768912 22.579084525114098)",
+            layoutNum: null,
+            name: "为服务",
+            position:
+              "POLYGON((114.06625870271493 22.57933098490496,114.06607568371638 22.57883806455993,114.0666338916619 22.578948546861326,114.06625870271493 22.57933098490496))",
+              "POLYGON((114.0674078473529 22.578227742921687,114.0666545247348 22.577606771155626,114.06775999224539 22.577573652581922,114.0674078473529 22.578227742921687))",
+              "POLYGON((104.10376206947207 30.663887935595106,104.11603978806018 30.661557956203996,104.1081540988857 30.65871012657184,104.10376206947207 30.663887935595106))",
+          },
+          {
+            bizcircleGmv: 0.023,
+            bizcircleIdL1: null,
+            bizcircleIdL2: 6,
+            bizcircleL1Name: "",
+            bizcircleL2Name: "饿死位夫人",
+            centerPoint: "POINT(121.5252373416777 31.248844413681923)",
+            layoutNum: 1309,
+            name: "饿死位夫人",
+            position:
+              "POLYGON((121.52422768140832 31.24978296816161,121.52624700194725 31.249201897001324,121.5248362012862 31.247906121391892,121.5248362012862 31.247906121391892,121.52422768140832 31.24978296816161))",
+              "POLYGON((114.19935248468921 30.63812331892105,114.19820265363644 30.59287158960237,114.42069496234778 30.604808185042767,114.19935248468921 30.63812331892105))",
+              "POLYGON((116.46802728577312 39.85989373358529,116.46809047029163 39.8430428079365,116.48363386184299 39.848546603452796,116.49197421828518 39.859309378220196,116.48388659991699 39.86023460523191,116.46802728577312 39.85989373358529))",
+              "POLYGON((121.52481750937446 31.25156380781526,121.52983851123565 31.25074767555031,121.52920523172159 31.24985380822888,121.52663671294721 31.250333427208353,121.52481750937446 31.25156380781526))",
+          },
+        ],
+        message: "success",
+        success: true,
+      };
 
-        if (this.bizcircleTag == 2) {
-          item.isJuHe = item.baseBizCircleL2Id ? true : false;
-        }
-        return item;
-      });
+      let data = [];
+
+      if(this.bizcircleTag == 2) {
+        data = res2.data
+      }
+
+      if(this.bizcircleTag == 1) {
+        data = res1.data
+      }
 
       console.log("77777", data.list);
 
